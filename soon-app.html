@@ -25,9 +25,64 @@
             width: 100%;
             height: 100vh;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 10;
+            gap: 2.5rem;
+        }
+
+        .countdown-container {
+            text-align: center;
+        }
+
+        .countdown-title {
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .countdown {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .time-block {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 1rem;
+            min-width: 80px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .time-value {
+            display: block;
+            font-size: 2rem;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .time-label {
+            display: block;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
+
+        .buttons-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
         }
 
         .soon-text {
@@ -178,7 +233,88 @@
             }
         }
 
+        .subscribe-btn {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            text-decoration: none;
+            min-width: 250px;
+            justify-content: center;
+        }
+
+        .subscribe-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #ff5252, #26c6da);
+        }
+
+        .subscribe-btn:active {
+            transform: translateY(0);
+        }
+
+        .subscribe-btn.secondary {
+            background: linear-gradient(45deg, #9c27b0, #673ab7);
+        }
+
+        .btn-icon {
+            font-size: 1.4rem;
+        }
+
         /* Адаптация для мобильных устройств */
+        @media (max-width: 768px) {
+            .sticker {
+                font-size: 2rem;
+            }
+            
+            .sticker:nth-child(2) {
+                font-size: 2.5rem;
+            }
+            
+            .sticker:nth-child(6) {
+                font-size: 2.8rem;
+            }
+
+            .soon-text {
+                font-size: clamp(3rem, 12vw, 8rem);
+            }
+
+            .countdown {
+                gap: 1rem;
+            }
+
+            .time-block {
+                min-width: 70px;
+                padding: 0.8rem;
+            }
+
+            .time-value {
+                font-size: 1.5rem;
+            }
+
+            .countdown-title {
+                font-size: 1.2rem;
+            }
+
+            .subscribe-btn {
+                font-size: 1rem;
+                padding: 0.8rem 1.5rem;
+                min-width: 200px;
+            }
+            
+            .container {
+                gap: 2rem;
+            }
+        }
         @media (max-width: 768px) {
             .sticker {
                 font-size: 2rem;
@@ -208,6 +344,39 @@
 
     <div class="container">
         <h1 class="soon-text">SOON</h1>
+        
+        <div class="countdown-container">
+            <div class="countdown-title">Запуск через:</div>
+            <div class="countdown" id="countdown">
+                <div class="time-block">
+                    <span class="time-value" id="days">00</span>
+                    <span class="time-label">дней</span>
+                </div>
+                <div class="time-block">
+                    <span class="time-value" id="hours">00</span>
+                    <span class="time-label">часов</span>
+                </div>
+                <div class="time-block">
+                    <span class="time-value" id="minutes">00</span>
+                    <span class="time-label">минут</span>
+                </div>
+                <div class="time-block">
+                    <span class="time-value" id="seconds">00</span>
+                    <span class="time-label">секунд</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="buttons-container">
+            <button class="subscribe-btn" onclick="subscribeToChannel('https://t.me/BlockchainWelle')">
+                <span class="btn-icon">💎</span>
+                Blockchain Welle
+            </button>
+            <button class="subscribe-btn secondary" onclick="subscribeToChannel('https://t.me/PacoCartel')">
+                <span class="btn-icon">💎</span>
+                Paco Cartel
+            </button>
+        </div>
     </div>
 
     <script>
@@ -224,6 +393,46 @@
             // Готовность приложения
             tg.ready();
         }
+
+        // Функция подписки на канал
+        function subscribeToChannel(channelUrl) {
+            if (window.Telegram && window.Telegram.WebApp) {
+                // Используем Telegram Web App API для открытия ссылки
+                window.Telegram.WebApp.openTelegramLink(channelUrl);
+            } else {
+                // Резервный вариант для обычного браузера
+                window.open(channelUrl, '_blank');
+            }
+        }
+
+        // Таймер обратного отсчета
+        function updateCountdown() {
+            const targetDate = new Date('2025-07-07T00:00:00').getTime();
+            const now = new Date().getTime();
+            const difference = targetDate - now;
+
+            if (difference > 0) {
+                const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+                document.getElementById('days').textContent = days.toString().padStart(2, '0');
+                document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
+                document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+                document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+            } else {
+                // Если дата прошла
+                document.getElementById('days').textContent = '00';
+                document.getElementById('hours').textContent = '00';
+                document.getElementById('minutes').textContent = '00';
+                document.getElementById('seconds').textContent = '00';
+            }
+        }
+
+        // Запускаем таймер
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
 
         // Добавляем интерактивность - создание новых стикеров при клике
         document.addEventListener('click', createRandomSticker);
