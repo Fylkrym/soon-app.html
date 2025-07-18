@@ -3,1012 +3,1052 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SOON - Telegram Web App</title>
+    <title>База подарков</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ton-connect-ui/2.0.0/ton-connect-ui.min.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
+            margin: 0;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            overflow-x: hidden;
-            min-height: 100vh;
-            position: relative;
+            background: var(--tg-theme-bg-color, #1a1a2e);
+            color: var(--tg-theme-text-color, #ffffff);
+            overscroll-behavior: none;
         }
-
-        .container {
-            position: relative;
-            width: 100%;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-            gap: 2rem;
-            padding: 2rem 1rem;
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
         }
-
-        .points-display {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 15px;
-            padding: 0.8rem 1.2rem;
-            color: white;
-            font-weight: 600;
-            font-size: 1.1rem;
-            z-index: 100;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-
-        .countdown-container {
-            text-align: center;
+        
+        .spin {
+            animation: spin 2s linear infinite;
         }
-
-        .countdown-title {
-            color: #fff;
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-        }
-
-        .countdown {
-            display: flex;
-            gap: 1.5rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .time-block {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
-            padding: 1rem;
-            min-width: 80px;
-            text-align: center;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-
-        .time-value {
-            display: block;
-            font-size: 2rem;
-            font-weight: 900;
-            color: #fff;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-        }
-
-        .time-label {
-            display: block;
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.8);
-            margin-top: 0.5rem;
-            font-weight: 500;
-        }
-
-        .soon-text {
-            font-size: clamp(4rem, 15vw, 12rem);
-            font-weight: 900;
-            color: #fff;
-            text-shadow: 
-                0 0 20px rgba(255, 255, 255, 0.5),
-                0 0 40px rgba(255, 255, 255, 0.3),
-                0 0 60px rgba(255, 255, 255, 0.1);
-            letter-spacing: 0.1em;
-            animation: pulse 2s ease-in-out infinite alternate;
-        }
-
-        @keyframes pulse {
-            from {
-                transform: scale(1);
-                text-shadow: 
-                    0 0 20px rgba(255, 255, 255, 0.5),
-                    0 0 40px rgba(255, 255, 255, 0.3),
-                    0 0 60px rgba(255, 255, 255, 0.1);
-            }
-            to {
-                transform: scale(1.05);
-                text-shadow: 
-                    0 0 30px rgba(255, 255, 255, 0.8),
-                    0 0 60px rgba(255, 255, 255, 0.5),
-                    0 0 90px rgba(255, 255, 255, 0.3);
-            }
-        }
-
-        .tasks-container {
-            width: 100%;
-            max-width: 400px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            padding: 1.5rem;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-
-        .tasks-title {
-            color: #fff;
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            text-align: center;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-        }
-
-        .task-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
-            padding: 1rem;
-            margin-bottom: 0.8rem;
-            transition: all 0.3s ease;
-        }
-
-        .task-item:hover {
-            background: rgba(255, 255, 255, 0.15);
-            transform: translateY(-2px);
-        }
-
-        .task-item.completed {
-            background: rgba(76, 175, 80, 0.3);
-            border-color: rgba(76, 175, 80, 0.5);
-        }
-
-        .task-item.checking {
-            background: rgba(255, 193, 7, 0.3);
-            border-color: rgba(255, 193, 7, 0.5);
-        }
-
-        .task-info {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-        }
-
-        .task-icon {
-            font-size: 1.5rem;
-        }
-
-        .task-details {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .task-name {
-            color: #fff;
-            font-weight: 600;
-            font-size: 1rem;
-        }
-
-        .task-reward {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 0.9rem;
-            margin-top: 0.2rem;
-        }
-
-        .task-button {
-            background: linear-gradient(45deg, #4CAF50, #45a049);
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 25px;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.9rem;
-            min-width: 100px;
-        }
-
-        .task-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
-        }
-
-        .task-button:disabled {
-            background: rgba(255, 255, 255, 0.3);
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .task-button.completed {
-            background: linear-gradient(45deg, #2196F3, #1976D2);
-        }
-
-        .task-button.checking {
-            background: linear-gradient(45deg, #FF9800, #F57C00);
-        }
-
-        .wallet-section {
-            width: 100%;
-            max-width: 400px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            padding: 1.5rem;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
-
-        .wallet-title {
-            color: #fff;
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-        }
-
-        .wallet-button {
-            background: linear-gradient(45deg, #0098EA, #0076D3);
-            border: none;
-            padding: 1rem 2rem;
-            border-radius: 50px;
-            color: white;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-
-        .wallet-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-        }
-
-        .wallet-button:disabled {
-            background: rgba(76, 175, 80, 0.8);
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .wallet-info {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 0.9rem;
-            margin-top: 0.5rem;
-        }
-
-        .referral-section {
-            width: 100%;
-            max-width: 400px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            padding: 1.5rem;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
-
-        .referral-title {
-            color: #fff;
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-        }
-
-        .referral-stats {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 1rem;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-number {
-            color: #fff;
-            font-size: 1.5rem;
-            font-weight: 900;
-            display: block;
-        }
-
-        .stat-label {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 0.9rem;
-            margin-top: 0.2rem;
-        }
-
-        .referral-link {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            padding: 0.8rem;
-            color: #fff;
-            font-size: 0.9rem;
-            word-break: break-all;
-            margin-bottom: 1rem;
-        }
-
-        .copy-button {
-            background: linear-gradient(45deg, #9c27b0, #673ab7);
-            border: none;
-            padding: 0.8rem 1.5rem;
-            border-radius: 25px;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            width: 100%;
-        }
-
-        .copy-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(156, 39, 176, 0.4);
-        }
-
-        .copy-button:disabled {
-            background: rgba(255, 255, 255, 0.3);
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .stickers-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            pointer-events: none;
-        }
-
-        .sticker {
-            position: absolute;
-            font-size: 3rem;
-            animation: float 8s ease-in-out infinite;
-            opacity: 0.6;
-        }
-
-        @keyframes float {
-            0%, 100% {
-                transform: translateY(0px) rotate(0deg);
-            }
-            25% {
-                transform: translateY(-20px) rotate(5deg);
-            }
-            50% {
-                transform: translateY(-40px) rotate(0deg);
-            }
-            75% {
-                transform: translateY(-20px) rotate(-5deg);
-            }
-        }
-
-        .sticker:nth-child(1) { top: 10%; left: 10%; animation-delay: 0s; font-size: 2.5rem; }
-        .sticker:nth-child(2) { top: 20%; right: 15%; animation-delay: 1s; font-size: 3.5rem; }
-        .sticker:nth-child(3) { bottom: 25%; left: 8%; animation-delay: 2s; font-size: 2.8rem; }
-        .sticker:nth-child(4) { bottom: 15%; right: 20%; animation-delay: 3s; font-size: 3.2rem; }
-        .sticker:nth-child(5) { top: 50%; left: 5%; animation-delay: 4s; font-size: 2.3rem; }
-        .sticker:nth-child(6) { top: 60%; right: 10%; animation-delay: 5s; font-size: 3.8rem; }
-        .sticker:nth-child(7) { top: 35%; left: 85%; animation-delay: 6s; font-size: 2.6rem; }
-        .sticker:nth-child(8) { bottom: 40%; right: 5%; animation-delay: 7s; font-size: 3.1rem; }
-
-        .loading-spinner {
-            width: 20px;
-            height: 20px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-top: 2px solid white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
+        
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
-
-        .error-message {
-            color: #ff6b6b;
-            font-size: 0.9rem;
-            margin-top: 0.5rem;
-            text-align: center;
+        
+        .rarity-common { @apply bg-gray-600; }
+        .rarity-rare { @apply bg-blue-600; }
+        .rarity-epic { @apply bg-purple-600; }
+        .rarity-legendary { @apply bg-yellow-600; }
+        .rarity-custom { @apply bg-pink-600; }
+        
+        .collection-card {
+            background: linear-gradient(135deg, var(--color, #4f46e5) 0%, rgba(79, 70, 229, 0.8) 100%);
         }
-
-        .success-message {
-            color: #4CAF50;
-            font-size: 0.9rem;
-            margin-top: 0.5rem;
-            text-align: center;
+        
+        .telegram-button {
+            background: var(--tg-theme-button-color, #4f46e5);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
         }
-
-        .notification {
-            position: fixed;
-            top: 100px;
-            right: 20px;
-            background: rgba(76, 175, 80, 0.9);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(76, 175, 80, 0.5);
-            border-radius: 15px;
-            padding: 1rem;
-            color: white;
-            font-weight: 600;
-            z-index: 1000;
-            transform: translateX(100%);
-            transition: transform 0.3s ease;
+        
+        .telegram-button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
         }
-
-        .notification.show {
-            transform: translateX(0);
+        
+        .telegram-input {
+            background: var(--tg-theme-secondary-bg-color, #2a2a3e);
+            border: 1px solid var(--tg-theme-hint-color, #6b7280);
+            color: var(--tg-theme-text-color, #ffffff);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 16px;
+            width: 100%;
         }
-
-        /* Мобильная адаптация */
-        @media (max-width: 768px) {
-            .points-display {
-                top: 10px;
-                right: 10px;
-                padding: 0.6rem 1rem;
-                font-size: 1rem;
-            }
-            
-            .container {
-                padding: 1rem;
-                gap: 1.5rem;
-            }
-            
-            .tasks-container,
-            .wallet-section,
-            .referral-section {
-                max-width: 100%;
-                padding: 1rem;
-            }
-            
-            .soon-text {
-                font-size: clamp(3rem, 12vw, 8rem);
-            }
-            
-            .countdown {
-                gap: 1rem;
-            }
-            
-            .time-block {
-                min-width: 70px;
-                padding: 0.8rem;
-            }
-            
-            .time-value {
-                font-size: 1.5rem;
-            }
-            
-            .task-item {
-                flex-direction: column;
-                gap: 0.8rem;
-                text-align: center;
-            }
-            
-            .task-info {
-                flex-direction: column;
-                gap: 0.5rem;
-            }
-            
-            .sticker {
-                font-size: 2rem;
-            }
-
-            .notification {
-                top: 80px;
-                right: 10px;
-                left: 10px;
-                text-align: center;
-            }
+        
+        .telegram-input:focus {
+            outline: none;
+            border-color: var(--tg-theme-button-color, #4f46e5);
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
         }
     </style>
 </head>
 <body>
-    <div class="points-display">
-        <span id="points">0</span> XP
-    </div>
+    <div id="root"></div>
 
-    <div class="stickers-container">
-        <div class="sticker">🎉</div>
-        <div class="sticker">🚀</div>
-        <div class="sticker">⭐</div>
-        <div class="sticker">🔥</div>
-        <div class="sticker">💎</div>
-        <div class="sticker">🎊</div>
-        <div class="sticker">⚡</div>
-        <div class="sticker">🌟</div>
-    </div>
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
 
-    <div class="container">
-        <h1 class="soon-text">SOON</h1>
-        
-        <div class="countdown-container">
-            <div class="countdown-title">Запуск через:</div>
-            <div class="countdown" id="countdown">
-                <div class="time-block">
-                    <span class="time-value" id="days">00</span>
-                    <span class="time-label">дней</span>
-                </div>
-                <div class="time-block">
-                    <span class="time-value" id="hours">00</span>
-                    <span class="time-label">часов</span>
-                </div>
-                <div class="time-block">
-                    <span class="time-value" id="minutes">00</span>
-                    <span class="time-label">минут</span>
-                </div>
-                <div class="time-block">
-                    <span class="time-value" id="seconds">00</span>
-                    <span class="time-label">секунд</span>
-                </div>
-            </div>
-        </div>
+        // Инициализация Telegram WebApp
+        if (window.Telegram && window.Telegram.WebApp) {
+            const tg = window.Telegram.WebApp;
+            tg.expand();
+            tg.MainButton.hide();
+            tg.BackButton.hide();
+        }
 
-        <div class="wallet-section">
-            <div class="wallet-title">Подключение кошелька</div>
-            <button class="wallet-button" id="connectWallet">
-                <span id="walletIcon">💎</span>
-                <span id="walletText">Подключить TON кошелек</span>
-            </button>
-            <div class="wallet-info">1,000 XP за подключение</div>
-            <div id="walletError" class="error-message" style="display: none;"></div>
-        </div>
-
-        <div class="tasks-container">
-            <div class="tasks-title">Задания</div>
-            <div class="task-item" id="task-blockchain">
-                <div class="task-info">
-                    <span class="task-icon">💎</span>
-                    <div class="task-details">
-                        <div class="task-name">Blockchain Welle</div>
-                        <div class="task-reward">+100 XP</div>
-                    </div>
-                </div>
-                <button class="task-button" onclick="completeTask('blockchain', 'https://t.me/BlockchainWelle', '@BlockchainWelle')">
-                    Подписаться
-                </button>
-            </div>
-            <div class="task-item" id="task-paco">
-                <div class="task-info">
-                    <span class="task-icon">💎</span>
-                    <div class="task-details">
-                        <div class="task-name">Paco Cartel</div>
-                        <div class="task-reward">+100 XP</div>
-                    </div>
-                </div>
-                <button class="task-button" onclick="completeTask('paco', 'https://t.me/PacoCartel', '@PacoCartel')">
-                    Подписаться
-                </button>
-            </div>
-        </div>
-
-        <div class="referral-section">
-            <div class="referral-title">Пригласи друзей</div>
-            <div class="referral-stats">
-                <div class="stat-item">
-                    <span class="stat-number" id="referralCount">0</span>
-                    <span class="stat-label">Рефералов</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-number" id="referralPoints">0</span>
-                    <span class="stat-label">XP получено</span>
-                </div>
-            </div>
-            <div class="referral-link" id="referralLink">
-                Подключите кошелек для получения реферальной ссылки
-            </div>
-            <button class="copy-button" id="copyButton" onclick="copyReferralLink()" disabled>
-                Скопировать ссылку
-            </button>
-        </div>
-    </div>
-
-    <script>
-        // Конфигурация
-        const CONFIG = {
-            API_BASE_URL: 'https://your-api-domain.com/api',
-            BOT_TOKEN: 'YOUR_BOT_TOKEN',
-            BOT_USERNAME: 'your_bot_username',
-            LAUNCH_DATE: new Date('2025-08-01T00:00:00Z').getTime(),
-            MANIFEST_URL: 'https://your-domain.com/tonconnect-manifest.json'
+        // Утилиты для работы с localStorage
+        const Storage = {
+            get: (key, defaultValue = null) => {
+                try {
+                    const item = localStorage.getItem(key);
+                    return item ? JSON.parse(item) : defaultValue;
+                } catch {
+                    return defaultValue;
+                }
+            },
+            
+            set: (key, value) => {
+                try {
+                    localStorage.setItem(key, JSON.stringify(value));
+                } catch (e) {
+                    console.error('Storage error:', e);
+                }
+            }
         };
-        
-        // Глобальные переменные
-        let tg = null;
-        let userId = null;
-        let userWallet = null;
-        let tonConnectUI = null;
-        let referralCode = null;
-        let countdownInterval = null;
 
-        // Инициализация Telegram Web App
-        function initTelegramWebApp() {
-            if (window.Telegram && window.Telegram.WebApp) {
-                tg = window.Telegram.WebApp;
-                tg.expand();
-                tg.setHeaderColor('#667eea');
-                tg.ready();
-                
-                // Получаем данные пользователя
-                if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                    userId = tg.initDataUnsafe.user.id;
-                    console.log('User ID:', userId);
+        // Генератор ID
+        const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
+
+        // Цвета для коллекций
+        const COLLECTION_COLORS = [
+            '#ef4444', '#f97316', '#eab308', '#22c55e', 
+            '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', 
+            '#ec4899', '#f43f5e'
+        ];
+
+        // Редкости
+        const RARITIES = {
+            common: { name: 'Обычный', color: 'gray-600' },
+            rare: { name: 'Редкий', color: 'blue-600' },
+            epic: { name: 'Эпический', color: 'purple-600' },
+            legendary: { name: 'Легендарный', color: 'yellow-600' },
+            custom: { name: 'Особый', color: 'pink-600' }
+        };
+
+        // Компонент загрузки
+        const SplashScreen = ({ onComplete }) => {
+            useEffect(() => {
+                const timer = setTimeout(onComplete, 2500);
+                return () => clearTimeout(timer);
+            }, [onComplete]);
+
+            return (
+                <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 to-purple-900">
+                    <div className="text-center">
+                        <div className="text-6xl mb-4 spin">🎁</div>
+                        <h1 className="text-3xl font-bold text-white mb-2">База подарков</h1>
+                        <p className="text-blue-200">Управляй своими коллекциями</p>
+                        <div className="mt-8">
+                            <div className="animate-pulse flex space-x-1 justify-center">
+                                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                                <div className="w-2 h-2 bg-blue-400 rounded-full animation-delay-200"></div>
+                                <div className="w-2 h-2 bg-blue-400 rounded-full animation-delay-400"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Главный экран
+        const HomeScreen = ({ collections, gifts, onViewCollections }) => {
+            const totalCollections = Object.keys(collections).length;
+            const totalGifts = Object.keys(gifts).length;
+            const recentGifts = Object.values(gifts)
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                .slice(0, 3);
+
+            return (
+                <div className="min-h-screen p-4 fade-in">
+                    <div className="max-w-md mx-auto">
+                        {/* Заголовок */}
+                        <div className="text-center mb-8">
+                            <div className="text-5xl mb-4">🎁</div>
+                            <h1 className="text-2xl font-bold mb-2">База подарков</h1>
+                            <p className="text-gray-400">Telegram коллекции и подарки</p>
+                        </div>
+
+                        {/* Статистика */}
+                        <div className="grid grid-cols-2 gap-4 mb-8">
+                            <div className="bg-gray-800 rounded-xl p-4 text-center">
+                                <div className="text-2xl font-bold text-blue-400">{totalCollections}</div>
+                                <div className="text-sm text-gray-400">Коллекций</div>
+                            </div>
+                            <div className="bg-gray-800 rounded-xl p-4 text-center">
+                                <div className="text-2xl font-bold text-green-400">{totalGifts}</div>
+                                <div className="text-sm text-gray-400">Подарков</div>
+                            </div>
+                        </div>
+
+                        {/* Последние подарки */}
+                        {recentGifts.length > 0 && (
+                            <div className="mb-8">
+                                <h3 className="text-lg font-semibold mb-4">Последние добавленные</h3>
+                                <div className="space-y-2">
+                                    {recentGifts.map(gift => {
+                                        const collection = collections[gift.collection_id];
+                                        const rarity = RARITIES[gift.rarity];
+                                        return (
+                                            <div key={gift.id} className="bg-gray-800 rounded-lg p-3 flex items-center justify-between">
+                                                <div className="flex items-center">
+                                                    <div className="text-xl mr-3">
+                                                        {gift.emoji_id ? `[${gift.emoji_id.slice(0, 8)}...]` : '🎁'}
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-medium">{gift.name}</div>
+                                                        <div className="text-sm text-gray-400">{collection?.name}</div>
+                                                    </div>
+                                                </div>
+                                                <div className={`px-2 py-1 rounded text-xs bg-${rarity.color} text-white`}>
+                                                    {rarity.name}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Главная кнопка */}
+                        <button 
+                            onClick={onViewCollections}
+                            className="telegram-button w-full py-4 text-lg font-semibold"
+                        >
+                            🔍 Посмотреть все коллекции
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        // Экран коллекций
+        const CollectionsScreen = ({ collections, gifts, onSelectCollection, onAddCollection, onBack }) => {
+            const [searchTerm, setSearchTerm] = useState('');
+            
+            const filteredCollections = Object.entries(collections).filter(([id, collection]) =>
+                collection.name.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            const getGiftCount = (collectionId) => {
+                return Object.values(gifts).filter(gift => gift.collection_id === collectionId).length;
+            };
+
+            useEffect(() => {
+                if (window.Telegram?.WebApp) {
+                    window.Telegram.WebApp.BackButton.show();
+                    window.Telegram.WebApp.BackButton.onClick(onBack);
+                    
+                    return () => {
+                        window.Telegram.WebApp.BackButton.hide();
+                        window.Telegram.WebApp.BackButton.offClick(onBack);
+                    };
                 }
-                
-                // Проверяем реферальный код
-                if (tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
-                    referralCode = tg.initDataUnsafe.start_param;
-                    console.log('Referral code:', referralCode);
+            }, [onBack]);
+
+            return (
+                <div className="min-h-screen p-4 fade-in">
+                    <div className="max-w-md mx-auto">
+                        <div className="flex justify-between items-center mb-6">
+                            <h1 className="text-2xl font-bold">Коллекции</h1>
+                            <button 
+                                onClick={onAddCollection}
+                                className="telegram-button px-4 py-2"
+                            >
+                                ➕ Добавить
+                            </button>
+                        </div>
+
+                        {/* Поиск */}
+                        <div className="mb-6">
+                            <input
+                                type="text"
+                                placeholder="Поиск коллекций..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="telegram-input"
+                            />
+                        </div>
+
+                        {/* Список коллекций */}
+                        <div className="space-y-4">
+                            {filteredCollections.length === 0 ? (
+                                <div className="text-center py-12">
+                                    <div className="text-4xl mb-4">📦</div>
+                                    <p className="text-gray-400">
+                                        {searchTerm ? 'Коллекции не найдены' : 'Коллекций пока нет'}
+                                    </p>
+                                </div>
+                            ) : (
+                                filteredCollections.map(([id, collection]) => (
+                                    <div
+                                        key={id}
+                                        onClick={() => onSelectCollection(id)}
+                                        className="collection-card rounded-xl p-4 cursor-pointer transition-transform hover:scale-105"
+                                        style={{ '--color': collection.color }}
+                                    >
+                                        <div className="flex justify-between items-start">
+                                            <div className="flex-1">
+                                                <h3 className="font-bold text-lg text-white mb-1">
+                                                    {collection.name}
+                                                </h3>
+                                                {collection.description && (
+                                                    <p className="text-white/80 text-sm mb-2">
+                                                        {collection.description}
+                                                    </p>
+                                                )}
+                                                <div className="text-white/90 text-sm">
+                                                    {getGiftCount(id)} подарков
+                                                </div>
+                                            </div>
+                                            <div className="text-2xl opacity-80">📦</div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Экран коллекции
+        const CollectionScreen = ({ collection, gifts, onAddGift, onEditGift, onDeleteGift, onBack }) => {
+            const collectionGifts = Object.values(gifts).filter(gift => gift.collection_id === collection.id);
+
+            useEffect(() => {
+                if (window.Telegram?.WebApp) {
+                    window.Telegram.WebApp.BackButton.show();
+                    window.Telegram.WebApp.BackButton.onClick(onBack);
+                    
+                    return () => {
+                        window.Telegram.WebApp.BackButton.hide();
+                        window.Telegram.WebApp.BackButton.offClick(onBack);
+                    };
                 }
-            } else {
-                // Fallback для тестирования вне Telegram
-                console.log('Running outside Telegram, using mock data');
-                userId = 'mock_user_' + Date.now();
-            }
-        }
+            }, [onBack]);
 
-        // Инициализация TON Connect
-        function initTonConnect() {
-            if (typeof TonConnectUI !== 'undefined') {
-                tonConnectUI = new TonConnectUI({
-                    manifestUrl: CONFIG.MANIFEST_URL,
-                    buttonRootId: null
-                });
+            return (
+                <div className="min-h-screen p-4 fade-in">
+                    <div className="max-w-md mx-auto">
+                        <div className="mb-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h1 className="text-2xl font-bold">{collection.name}</h1>
+                                <button 
+                                    onClick={onAddGift}
+                                    className="telegram-button px-4 py-2"
+                                >
+                                    ➕ Добавить подарок
+                                </button>
+                            </div>
+                            {collection.description && (
+                                <p className="text-gray-400">{collection.description}</p>
+                            )}
+                            <div className="text-sm text-gray-500 mt-2">
+                                Всего подарков: {collectionGifts.length}
+                            </div>
+                        </div>
 
-                tonConnectUI.onStatusChange(wallet => {
-                    if (wallet) {
-                        handleWalletConnection(wallet);
-                    } else {
-                        handleWalletDisconnection();
-                    }
-                });
-            } else {
-                console.warn('TON Connect UI not available');
-            }
-        }
+                        {/* Список подарков */}
+                        <div className="space-y-3">
+                            {collectionGifts.length === 0 ? (
+                                <div className="text-center py-12">
+                                    <div className="text-4xl mb-4">🎁</div>
+                                    <p className="text-gray-400 mb-4">В коллекции пока нет подарков</p>
+                                    <button 
+                                        onClick={onAddGift}
+                                        className="telegram-button"
+                                    >
+                                        Добавить первый подарок
+                                    </button>
+                                </div>
+                            ) : (
+                                collectionGifts.map(gift => {
+                                    const rarity = RARITIES[gift.rarity];
+                                    return (
+                                        <div key={gift.id} className="bg-gray-800 rounded-lg p-4">
+                                            <div className="flex items-start justify-between">
+                                                <div className="flex items-start flex-1">
+                                                    <div className="text-2xl mr-3">
+                                                        {gift.emoji_id ? `[${gift.emoji_id.slice(0, 8)}...]` : '🎁'}
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <h3 className="font-semibold">{gift.name}</h3>
+                                                        {gift.description && (
+                                                            <p className="text-gray-400 text-sm mt-1">
+                                                                {gift.description}
+                                                            </p>
+                                                        )}
+                                                        <div className="mt-2">
+                                                            <span className={`inline-block px-2 py-1 rounded text-xs bg-${rarity.color} text-white`}>
+                                                                {rarity.name}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-2 ml-2">
+                                                    <button 
+                                                        onClick={() => onEditGift(gift)}
+                                                        className="text-blue-400 hover:text-blue-300 p-1"
+                                                    >
+                                                        ✏️
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => onDeleteGift(gift.id)}
+                                                        className="text-red-400 hover:text-red-300 p-1"
+                                                    >
+                                                        🗑️
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
 
-        // API клиент
-        class ApiClient {
-            constructor() {
-                this.baseUrl = CONFIG.API_BASE_URL;
-                this.headers = {
-                    'Content-Type': 'application/json',
-                    'X-Telegram-Init-Data': window.Telegram?.WebApp?.initData || ''
+        // Форма добавления коллекции
+        const AddCollectionForm = ({ onSave, onCancel }) => {
+            const [name, setName] = useState('');
+            const [description, setDescription] = useState('');
+            const [color, setColor] = useState(COLLECTION_COLORS[0]);
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (!name.trim()) return;
+
+                const collection = {
+                    id: generateId(),
+                    name: name.trim(),
+                    description: description.trim(),
+                    color,
+                    created_at: new Date().toISOString()
                 };
-            }
 
-            async request(endpoint, options = {}) {
-                try {
-                    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-                        ...options,
-                        headers: { ...this.headers, ...options.headers }
+                onSave(collection);
+            };
+
+            useEffect(() => {
+                if (window.Telegram?.WebApp) {
+                    window.Telegram.WebApp.BackButton.show();
+                    window.Telegram.WebApp.BackButton.onClick(onCancel);
+                    
+                    return () => {
+                        window.Telegram.WebApp.BackButton.hide();
+                        window.Telegram.WebApp.BackButton.offClick(onCancel);
+                    };
+                }
+            }, [onCancel]);
+
+            return (
+                <div className="min-h-screen p-4 fade-in">
+                    <div className="max-w-md mx-auto">
+                        <h1 className="text-2xl font-bold mb-6">Добавить коллекцию</h1>
+
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            <div>
+                                <label className="block text-sm font-medium mb-2">
+                                    Название *
+                                </label>
+                                <input
+                                    type="text"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    placeholder="Название коллекции"
+                                    className="telegram-input"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-2">
+                                    Описание
+                                </label>
+                                <textarea
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
+                                    placeholder="Описание коллекции (необязательно)"
+                                    className="telegram-input resize-none"
+                                    rows="3"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-2">
+                                    Цвет коллекции
+                                </label>
+                                <div className="grid grid-cols-5 gap-2">
+                                    {COLLECTION_COLORS.map(col => (
+                                        <button
+                                            key={col}
+                                            type="button"
+                                            onClick={() => setColor(col)}
+                                            className={`w-10 h-10 rounded-lg border-2 ${
+                                                color === col ? 'border-white' : 'border-transparent'
+                                            }`}
+                                            style={{ backgroundColor: col }}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3">
+                                <button
+                                    type="button"
+                                    onClick={onCancel}
+                                    className="flex-1 bg-gray-600 text-white rounded-lg py-3 font-semibold"
+                                >
+                                    Отмена
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={!name.trim()}
+                                    className="flex-1 telegram-button py-3 font-semibold disabled:opacity-50"
+                                >
+                                    Создать
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            );
+        };
+
+        // Форма добавления/редактирования подарка
+        const GiftForm = ({ gift, collectionId, onSave, onCancel }) => {
+            const [name, setName] = useState(gift?.name || '');
+            const [description, setDescription] = useState(gift?.description || '');
+            const [rarity, setRarity] = useState(gift?.rarity || 'common');
+            const [emojiId, setEmojiId] = useState(gift?.emoji_id || '');
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (!name.trim()) return;
+
+                const giftData = {
+                    id: gift?.id || generateId(),
+                    name: name.trim(),
+                    description: description.trim(),
+                    rarity,
+                    emoji_id: emojiId.trim(),
+                    collection_id: collectionId,
+                    created_at: gift?.created_at || new Date().toISOString()
+                };
+
+                onSave(giftData);
+            };
+
+            useEffect(() => {
+                if (window.Telegram?.WebApp) {
+                    window.Telegram.WebApp.BackButton.show();
+                    window.Telegram.WebApp.BackButton.onClick(onCancel);
+                    
+                    return () => {
+                        window.Telegram.WebApp.BackButton.hide();
+                        window.Telegram.WebApp.BackButton.offClick(onCancel);
+                    };
+                }
+            }, [onCancel]);
+
+            return (
+                <div className="min-h-screen p-4 fade-in">
+                    <div className="max-w-md mx-auto">
+                        <h1 className="text-2xl font-bold mb-6">
+                            {gift ? 'Редактировать подарок' : 'Добавить подарок'}
+                        </h1>
+
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            <div>
+                                <label className="block text-sm font-medium mb-2">
+                                    Название *
+                                </label>
+                                <input
+                                    type="text"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    placeholder="Название подарка"
+                                    className="telegram-input"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-2">
+                                    Редкость
+                                </label>
+                                <select
+                                    value={rarity}
+                                    onChange={(e) => setRarity(e.target.value)}
+                                    className="telegram-input"
+                                >
+                                    {Object.entries(RARITIES).map(([key, value]) => (
+                                        <option key={key} value={key}>
+                                            {value.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-2">
+                                    Custom Emoji ID
+                                </label>
+                                <input
+                                    type="text"
+                                    value={emojiId}
+                                    onChange={(e) => setEmojiId(e.target.value)}
+                                    placeholder="Вставьте custom_emoji_id из Telegram"
+                                    className="telegram-input"
+                                />
+                                <p className="text-xs text-gray-400 mt-1">
+                                    ID кастомного эмодзи из Telegram (необязательно)
+                                </p>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-2">
+                                    Описание
+                                </label>
+                                <textarea
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
+                                    placeholder="Описание подарка (необязательно)"
+                                    className="telegram-input resize-none"
+                                    rows="3"
+                                />
+                            </div>
+
+                            <div className="flex gap-3">
+                                <button
+                                    type="button"
+                                    onClick={onCancel}
+                                    className="flex-1 bg-gray-600 text-white rounded-lg py-3 font-semibold"
+                                >
+                                    Отмена
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={!name.trim()}
+                                    className="flex-1 telegram-button py-3 font-semibold disabled:opacity-50"
+                                >
+                                    {gift ? 'Сохранить' : 'Добавить'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            );
+        };
+
+        // Экран настроек и экспорта
+        const SettingsScreen = ({ onExport, onImport, onBack }) => {
+            const fileInputRef = useRef(null);
+
+            const handleImport = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const data = JSON.parse(event.target.result);
+                        onImport(data);
+                    } catch (error) {
+                        alert('Ошибка при импорте файла');
+                    }
+                };
+                reader.readAsText(file);
+            };
+
+            useEffect(() => {
+                if (window.Telegram?.WebApp) {
+                    window.Telegram.WebApp.BackButton.show();
+                    window.Telegram.WebApp.BackButton.onClick(onBack);
+                    
+                    return () => {
+                        window.Telegram.WebApp.BackButton.hide();
+                        window.Telegram.WebApp.BackButton.offClick(onBack);
+                    };
+                }
+            }, [onBack]);
+
+            return (
+                <div className="min-h-screen p-4 fade-in">
+                    <div className="max-w-md mx-auto">
+                        <h1 className="text-2xl font-bold mb-6">Настройки</h1>
+
+                        <div className="space-y-4">
+                            <div className="bg-gray-800 rounded-lg p-4">
+                                <h3 className="font-semibold mb-2">📤 Экспорт данных</h3>
+                                <p className="text-gray-400 text-sm mb-3">
+                                    Сохранить все коллекции и подарки в JSON файл
+                                </p>
+                                <button 
+                                    onClick={onExport}
+                                    className="telegram-button w-full"
+                                >
+                                    Экспортировать базу
+                                </button>
+                            </div>
+
+                            <div className="bg-gray-800 rounded-lg p-4">
+                                <h3 className="font-semibold mb-2">📥 Импорт данных</h3>
+                                <p className="text-gray-400 text-sm mb-3">
+                                    Загрузить данные из JSON файла
+                                </p>
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    onChange={handleImport}
+                                    accept=".json"
+                                    className="hidden"
+                                />
+                                <button 
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="telegram-button w-full"
+                                >
+                                    Выбрать файл
+                                </button>
+                            </div>
+
+                            <div className="bg-gray-800 rounded-lg p-4">
+                                <h3 className="font-semibold mb-2">ℹ️ О приложении</h3>
+                                <p className="text-gray-400 text-sm">
+                                    База подарков v1.0<br/>
+                                    Telegram WebApp для управления коллекциями
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Главное приложение
+        const App = () => {
+            const [currentScreen, setCurrentScreen] = useState('splash');
+            const [collections, setCollections] = useState({});
+            const [gifts, setGifts] = useState({});
+            const [selectedCollection, setSelectedCollection] = useState(null);
+            const [editingGift, setEditingGift] = useState(null);
+
+            // Загрузка данных при старте
+            useEffect(() => {
+                const savedCollections = Storage.get('collections', {});
+                const savedGifts = Storage.get('gifts', {});
+                setCollections(savedCollections);
+                setGifts(savedGifts);
+            }, []);
+
+            // Сохранение коллекций
+            useEffect(() => {
+                Storage.set('collections', collections);
+            }, [collections]);
+
+            // Сохранение подарков
+            useEffect(() => {
+                Storage.set('gifts', gifts);
+            }, [gifts]);
+
+            // Функции управления коллекциями
+            const addCollection = (collection) => {
+                setCollections(prev => ({
+                    ...prev,
+                    [collection.id]: collection
+                }));
+                setCurrentScreen('collections');
+            };
+
+            const selectCollection = (collectionId) => {
+                setSelectedCollection(collections[collectionId]);
+                setCurrentScreen('collection');
+            };
+
+            // Функции управления подарками
+            const addGift = (gift) => {
+                setGifts(prev => ({
+                    ...prev,
+                    [gift.id]: gift
+                }));
+                setCurrentScreen('collection');
+                setEditingGift(null);
+            };
+
+            const editGift = (gift) => {
+                setEditingGift(gift);
+                setCurrentScreen('gift-form');
+            };
+
+            const deleteGift = (giftId) => {
+                if (confirm('Удалить этот подарок?')) {
+                    setGifts(prev => {
+                        const newGifts = { ...prev };
+                        delete newGifts[giftId];
+                        return newGifts;
                     });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    return await response.json();
-                } catch (error) {
-                    console.error('API request failed:', error);
-                    throw error;
                 }
-            }
+            };
 
-            async getUserData(userId) {
-                return this.request(`/user/${userId}`);
-            }
-
-            async updateUserData(userId, data) {
-                return this.request(`/user/${userId}`, {
-                    method: 'POST',
-                    body: JSON.stringify(data)
-                });
-            }
-
-            async connectWallet(userId, walletAddress) {
-                return this.request(`/user/${userId}/wallet`, {
-                    method: 'POST',
-                    body: JSON.stringify({ wallet: walletAddress })
-                });
-            }
-
-            async completeTask(userId, taskId) {
-                return this.request(`/user/${userId}/task/${taskId}`, {
-                    method: 'POST'
-                });
-            }
-
-            async verifySubscription(userId, channelUsername) {
-                return this.request(`/verify-subscription`, {
-                    method: 'POST',
-                    body: JSON.stringify({ userId, channelUsername })
-                });
-            }
-
-            async processReferral(userId, referrerId) {
-                return this.request(`/referral`, {
-                    method: 'POST',
-                    body: JSON.stringify({ userId, referrerId })
-                });
-            }
-        }
-
-        const apiClient = new ApiClient();
-
-        // Система управления данными пользователя
-        class UserDataManager {
-            constructor() {
-                this.data = {
-                    points: 0,
-                    wallet: null,
-                    tasks: {},
-                    referrals: [],
-                    referralPoints: 0,
-                    createdAt: Date.now()
+            // Экспорт/импорт данных
+            const exportData = () => {
+                const data = {
+                    collections,
+                    gifts,
+                    exported_at: new Date().toISOString(),
+                    version: '1.0'
                 };
-            }
 
-            async loadUserData() {
-                try {
-                    if (userId && CONFIG.API_BASE_URL !== 'https://your-api-domain.com/api') {
-                        const userData = await apiClient.getUserData(userId);
-                        this.data = { ...this.data, ...userData };
-                    } else {
-                        // Используем локальные данные
-                        this.loadLocalData();
-                    }
-                } catch (error) {
-                    console.error('Ошибка загрузки данных пользователя:', error);
-                    this.loadLocalData();
-                }
+                const blob = new Blob([JSON.stringify(data, null, 2)], {
+                    type: 'application/json'
+                });
                 
-                // Обрабатываем реферальный код
-                if (referralCode && referralCode !== userId) {
-                    await this.processReferral(referralCode);
-                }
-                
-                this.updateUI();
-            }
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `gifts-database-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
 
-            loadLocalData() {
-                const saved = JSON.parse(localStorage.getItem(`user_${userId}`) || '{}');
-                this.data = { ...this.data, ...saved };
-            }
+                alert('База данных экспортирована!');
+            };
 
-            async saveUserData() {
+            const importData = (data) => {
                 try {
-                    if (userId && CONFIG.API_BASE_URL !== 'https://your-api-domain.com/api') {
-                        await apiClient.updateUserData(userId, this.data);
+                    if (data.collections && data.gifts) {
+                        if (confirm('Импорт заменит все текущие данные. Продолжить?')) {
+                            setCollections(data.collections);
+                            setGifts(data.gifts);
+                            setCurrentScreen('home');
+                            alert('База данных импортирована!');
+                        }
                     } else {
-                        // Сохраняем локально
-                        localStorage.setItem(`user_${userId}`, JSON.stringify(this.data));
+                        alert('Неверный формат файла');
                     }
                 } catch (error) {
-                    console.error('Ошибка сохранения данных:', error);
-                    localStorage.setItem(`user_${userId}`, JSON.stringify(this.data));
+                    alert('Ошибка при импорте данных');
                 }
-            }
+            };
 
-            async addPoints(amount, reason = '') {
-                this.data.points += amount;
-                this.updatePointsDisplay();
-                await this.saveUserData();
-                this.showNotification(`+${amount} XP`, reason);
-            }
+            // Навигация
+            const goHome = () => setCurrentScreen('home');
+            const goToCollections = () => setCurrentScreen('collections');
+            const goToSettings = () => setCurrentScreen('settings');
 
-            async setWallet(wallet) {
-                try {
-                    this.data.wallet = wallet;
+            // Рендер экранов
+            const renderScreen = () => {
+                switch (currentScreen) {
+                    case 'splash':
+                        return <SplashScreen onComplete={goHome} />;
                     
-                    if (CONFIG.API_BASE_URL !== 'https://your-api-domain.com/api') {
-                        await apiClient.connectWallet(userId, wallet);
-                    }
+                    case 'home':
+                        return (
+                            <HomeScreen 
+                                collections={collections}
+                                gifts={gifts}
+                                onViewCollections={goToCollections}
+                            />
+                        );
                     
-                    await this.addPoints(1000, 'Подключение кошелька');
-                    this.updateWalletUI();
-                    this.updateReferralUI();
-                } catch (error) {
-                    console.error('Ошибка подключения кошелька:', error);
-                    this.showError('Ошибка подключения кошелька');
-                }
-            }
-
-            async completeTask(taskId) {
-                try {
-                    if (CONFIG.API_BASE_URL !== 'https://your-api-domain.com/api') {
-                        await apiClient.completeTask(userId, taskId);
-                    }
+                    case 'collections':
+                        return (
+                            <CollectionsScreen 
+                                collections={collections}
+                                gifts={gifts}
+                                onSelectCollection={selectCollection}
+                                onAddCollection={() => setCurrentScreen('add-collection')}
+                                onBack={goHome}
+                            />
+                        );
                     
-                    this.data.tasks[taskId] = true;
-                    await this.addPoints(100, 'Выполнение задания');
-                    this.markTaskCompleted(taskId);
-                } catch (error) {
-                    console.error('Ошибка выполнения задания:', error);
-                    this.showError('Ошибка выполнения задания');
+                    case 'collection':
+                        return (
+                            <CollectionScreen 
+                                collection={selectedCollection}
+                                gifts={gifts}
+                                onAddGift={() => setCurrentScreen('gift-form')}
+                                onEditGift={editGift}
+                                onDeleteGift={deleteGift}
+                                onBack={goToCollections}
+                            />
+                        );
+                    
+                    case 'add-collection':
+                        return (
+                            <AddCollectionForm 
+                                onSave={addCollection}
+                                onCancel={goToCollections}
+                            />
+                        );
+                    
+                    case 'gift-form':
+                        return (
+                            <GiftForm 
+                                gift={editingGift}
+                                collectionId={selectedCollection?.id}
+                                onSave={addGift}
+                                onCancel={() => {
+                                    setEditingGift(null);
+                                    setCurrentScreen('collection');
+                                }}
+                            />
+                        );
+                    
+                    case 'settings':
+                        return (
+                            <SettingsScreen 
+                                onExport={exportData}
+                                onImport={importData}
+                                onBack={goHome}
+                            />
+                        );
+                    
+                    default:
+                        return <HomeScreen 
+                            collections={collections}
+                            gifts={gifts}
+                            onViewCollections={goToCollections}
+                        />;
                 }
-                        }
+            };
 
-            async processReferral(referrerId) {
-                if (referrerId === userId) return; // Нельзя пригласить самого себя
-
-                try {
-                    if (!this.data.referrals.includes(referrerId)) {
-                        if (CONFIG.API_BASE_URL !== 'https://your-api-domain.com/api') {
-                            await apiClient.processReferral(userId, referrerId);
-                        }
-
-                        this.data.referrals.push(referrerId);
-                        this.data.referralPoints += 500;
-                        this.updateReferralStats();
-                        await this.saveUserData();
-                        this.showNotification("+500 XP", "По рефералке");
-                    }
-                } catch (error) {
-                    console.error("Ошибка при обработке реферала:", error);
-                }
-            }
-
-            updateUI() {
-                this.updatePointsDisplay();
-                this.updateWalletUI();
-                this.updateReferralStats();
-                this.updateReferralUI();
-                this.updateTaskStatus();
-            }
-
-            updatePointsDisplay() {
-                document.getElementById("points").textContent = this.data.points;
-            }
-
-            updateWalletUI() {
-                if (this.data.wallet) {
-                    const walletText = document.getElementById("walletText");
-                    walletText.textContent = this.data.wallet.slice(0, 6) + "..." + this.data.wallet.slice(-4);
-                    document.getElementById("connectWallet").disabled = true;
-                }
-            }
-
-            updateReferralStats() {
-                document.getElementById("referralCount").textContent = this.data.referrals.length;
-                document.getElementById("referralPoints").textContent = this.data.referralPoints;
-            }
-
-            updateReferralUI() {
-                if (this.data.wallet && tg) {
-                    const link = `https://t.me/${CONFIG.BOT_USERNAME}?start=${userId}`;
-                    document.getElementById("referralLink").textContent = link;
-                    document.getElementById("copyButton").disabled = false;
-                }
-            }
-
-            updateTaskStatus() {
-                for (const taskId in this.data.tasks) {
-                    if (this.data.tasks[taskId]) {
-                        this.markTaskCompleted(taskId);
-                    }
-                }
-            }
-
-            markTaskCompleted(taskId) {
-                const taskButton = document.querySelector(`#task-${taskId} .task-button`);
-                if (taskButton) {
-                    taskButton.textContent = "Выполнено";
-                    taskButton.classList.add("completed");
-                    taskButton.disabled = true;
-                }
-                const taskItem = document.getElementById(`task-${taskId}`);
-                if (taskItem) {
-                    taskItem.classList.add("completed");
-                }
-            }
-
-            showNotification(message, reason = "") {
-                const notification = document.createElement("div");
-                notification.className = "notification";
-                notification.textContent = `${message}${reason ? ` — ${reason}` : ""}`;
-                document.body.appendChild(notification);
-                setTimeout(() => notification.classList.add("show"), 100);
-                setTimeout(() => {
-                    notification.classList.remove("show");
-                    setTimeout(() => notification.remove(), 300);
-                }, 3000);
-            }
-
-            showError(message) {
-                const errorBox = document.getElementById("walletError");
-                if (errorBox) {
-                    errorBox.textContent = message;
-                    errorBox.style.display = "block";
-                    setTimeout(() => (errorBox.style.display = "none"), 3000);
-                }
-            }
-        }
-
-        const userManager = new UserDataManager();
-
-        // Подключение кошелька
-        async function handleWalletConnection(wallet) {
-            userWallet = wallet.account.address;
-            await userManager.setWallet(userWallet);
-        }
-
-        function handleWalletDisconnection() {
-            console.warn("Кошелёк отключён");
-        }
-
-        // Копирование реферальной ссылки
-        function copyReferralLink() {
-            const link = document.getElementById("referralLink").textContent;
-            navigator.clipboard.writeText(link).then(() => {
-                userManager.showNotification("Ссылка скопирована");
-            });
-        }
-
-        // Проверка подписки на канал
-        async function completeTask(taskId, url, username) {
-            const button = document.querySelector(`#task-${taskId} .task-button`);
-            button.disabled = true;
-            button.classList.add("checking");
-            button.textContent = "Проверка...";
-
-            try {
-                const result = await apiClient.verifySubscription(userId, username);
-                if (result.success) {
-                    await userManager.completeTask(taskId);
-                } else {
-                    userManager.showError("Вы не подписались на канал");
-                }
-            } catch (error) {
-                userManager.showError("Ошибка проверки подписки");
-            }
-
-            button.disabled = false;
-            button.classList.remove("checking");
-            button.textContent = "Подписаться";
-        }
-
-        // Инициализация обратного отсчёта
-        function initCountdown() {
-            countdownInterval = setInterval(() => {
-                const now = Date.now();
-                const distance = CONFIG.LAUNCH_DATE - now;
-
-                if (distance < 0) {
-                    clearInterval(countdownInterval);
-                    document.getElementById("countdown").textContent = "Запуск!";
-                    return;
-                }
-
-                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-                document.getElementById("days").textContent = days.toString().padStart(2, "0");
-                document.getElementById("hours").textContent = hours.toString().padStart(2, "0");
-                document.getElementById("minutes").textContent = minutes.toString().padStart(2, "0");
-                document.getElementById("seconds").textContent = seconds.toString().padStart(2, "0");
-            }, 1000);
-        }
+            return (
+                <div className="app">
+                    {renderScreen()}
+                    
+                    {/* Плавающая кнопка настроек */}
+                    {currentScreen === 'home' && (
+                        <button
+                            onClick={goToSettings}
+                            className="fixed bottom-4 right-4 w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center text-xl shadow-lg hover:bg-gray-600 transition-colors"
+                            style={{ zIndex: 1000 }}
+                        >
+                            ⚙️
+                        </button>
+                    )}
+                </div>
+            );
+        };
 
         // Инициализация приложения
-        window.addEventListener("load", () => {
-            initTelegramWebApp();
-            initTonConnect();
-            initCountdown();
-            userManager.loadUserData();
+        const initApp = () => {
+            // Настройка Telegram WebApp
+            if (window.Telegram?.WebApp) {
+                const tg = window.Telegram.WebApp;
+                
+                // Расширяем на весь экран
+                tg.expand();
+                
+                // Скрываем кнопки по умолчанию
+                tg.MainButton.hide();
+                tg.BackButton.hide();
+                
+                // Включаем swipe-to-close
+                tg.enableClosingConfirmation();
+                
+                // Уведомляем Telegram что приложение готово
+                tg.ready();
+                
+                console.log('Telegram WebApp initialized:', {
+                    user: tg.initDataUnsafe?.user,
+                    version: tg.version,
+                    platform: tg.platform
+                });
+            }
+
+            // Рендерим приложение
+            ReactDOM.render(<App />, document.getElementById('root'));
+        };
+
+        // Добавляем демо-данные для тестирования (только если база пуста)
+        const addDemoData = () => {
+            const existingCollections = Storage.get('collections', {});
+            const existingGifts = Storage.get('gifts', {});
+            
+            if (Object.keys(existingCollections).length === 0) {
+                const demoCollections = {
+                    'demo1': {
+                        id: 'demo1',
+                        name: 'Праздничные подарки',
+                        description: 'Подарки к различным праздникам',
+                        color: '#ef4444',
+                        created_at: new Date().toISOString()
+                    },
+                    'demo2': {
+                        id: 'demo2',
+                        name: 'Игрушки',
+                        description: 'Коллекция игрушек',
+                        color: '#22c55e',
+                        created_at: new Date().toISOString()
+                    }
+                };
+
+                const demoGifts = {
+                    'gift1': {
+                        id: 'gift1',
+                        name: 'Jack-in-the-Box',
+                        collection_id: 'demo2',
+                        rarity: 'epic',
+                        emoji_id: '5431821190513583006',
+                        description: 'Классическая игрушка-сюрприз',
+                        created_at: new Date().toISOString()
+                    },
+                    'gift2': {
+                        id: 'gift2',
+                        name: 'Toy Bear',
+                        collection_id: 'demo2',
+                        rarity: 'rare',
+                        emoji_id: '5357570547519613136',
+                        description: 'Плюшевый мишка',
+                        created_at: new Date().toISOString()
+                    },
+                    'gift3': {
+                        id: 'gift3',
+                        name: 'Новогодний подарок',
+                        collection_id: 'demo1',
+                        rarity: 'legendary',
+                        emoji_id: '',
+                        description: 'Особый подарок к Новому году',
+                        created_at: new Date().toISOString()
+                    }
+                };
+
+                Storage.set('collections', demoCollections);
+                Storage.set('gifts', demoGifts);
+                
+                console.log('Demo data added');
+            }
+        };
+
+        // Запуск приложения
+        document.addEventListener('DOMContentLoaded', () => {
+            addDemoData();
+            initApp();
+        });
+
+        // Обработка ошибок
+        window.addEventListener('error', (event) => {
+            console.error('Application error:', event.error);
+        });
+
+        // Предотвращение случайного закрытия
+        window.addEventListener('beforeunload', (event) => {
+            if (window.Telegram?.WebApp?.isClosingConfirmationEnabled) {
+                event.preventDefault();
+                event.returnValue = '';
+            }
         });
     </script>
 </body>
